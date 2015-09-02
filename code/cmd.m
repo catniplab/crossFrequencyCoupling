@@ -89,11 +89,11 @@ xphiHigh = phiHigh(rpIdxAll);
 
 %%
 CFC = cell(5, 1);
-CFC{1} = estimateCFC_Canolty2006(f1, f2, xx1, xx2, xaLow, xphiLow, xaHigh, xphiHigh);
+CFC{1} = estimateCFC_MCS_Canolty2006(f1, f2, xx1, xx2, xaLow, xphiLow, xaHigh, xphiHigh);
 CFC{2} = estimateCFC_PLV_Lachaux1999(f1, f2, xx1, xx2, xaLow, xphiLow, xaHigh, xphiHigh);
 CFC{3} = estimateCFC_ESC_Bruns2004(f1, f2, xx1, xx2, xaLow, xphiLow, xaHigh, xphiHigh);
-CFC{4} = estimateCFC_GLM_Penny2008(f1, f2, xx1, xx2, xaLow, xphiLow, xaHigh, xphiHigh);
-CFC{5} = estimateCFC_Tort2008(f1, f2, xx1, xx2, xaLow, xphiLow, xaHigh, xphiHigh);
+CFC{4} = estimateCFC_R2R_Penny2008(f1, f2, xx1, xx2, xaLow, xphiLow, xaHigh, xphiHigh);
+CFC{5} = estimateCFC_EAA_Tort2008(f1, f2, xx1, xx2, xaLow, xphiLow, xaHigh, xphiHigh);
 CFCstr = {'MCS', 'PLV', 'ESC', 'R2R', 'EAA'};
 % mean compound signal
 % phase locking value
