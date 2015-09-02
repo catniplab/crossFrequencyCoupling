@@ -1,4 +1,4 @@
-function CFC = estimateCFC_template(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHigh, phiHigh)
+function [CFC, extra] = estimateCFC_template(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHigh, phiHigh, varargin)
 % Computes a cross-frequency-couping (CFC) index from 2 band-passed
 % signals, and their corresponding Hilbert transforms (or equivalent).
 % Same operation is applied to each column.
@@ -14,6 +14,7 @@ function CFC = estimateCFC_template(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHig
 %
 % Output
 %    CFC: [N x 1] single index which is higher when CFC is (supposedly) stronger
+%    extra: anything else that needs to be returned
 
 assert(fLow < fHigh);
 T = size(phiLow, 1);
@@ -24,6 +25,7 @@ assert(all(size(aLow) == [T,N]));
 assert(all(size(aHigh) == [T,N]));
 assert(all(size(phiHigh) == [T,N]));
 CFC = nan(N, 1);
+extra = [];
 
 error('I''m just a template');
 
