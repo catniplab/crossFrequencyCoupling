@@ -70,11 +70,14 @@ rpIdxAll = generateSurrogateIndices(T, minTimeShift, nSurrogate);
 %% Inspect decoherence
 % the phase autocorrelation should decay significantly by minTimeShift
 [xcLow, lags]  = xcorr(phiLow,  ceil(min(T/4, minTimeShift*8)), 'coeff');
-[xcHigh, lags] = xcorr(phiHigh, ceil(min(T/4, minTimeShift*8)), 'coeff');
+xcHigh = xcorr(phiHigh, ceil(min(T/4, minTimeShift*8)), 'coeff');
 figure(4125); clf; hold all; title('phase autocorrelation');
 plot(lags(lags>=0), xcLow (lags>=0));
 plot(lags(lags>=0), xcHigh(lags>=0));
 line(minTimeShift * [1, 1], [-1, 1], 'Color', 'k');
+lh = legend('Low freq', 'High freq', 'Location', 'SouthEast');
+set(lh, 'box', 'off');
+xlabel('time lag (samples)');
 
 %% Generate surrogates
 xx1 = repmat(xLow(:), 1, nSurrogate+1);
