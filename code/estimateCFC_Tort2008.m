@@ -14,11 +14,18 @@ else
 end
 
 N = size(xLow, 2);
-H = @(P) -sum(P(P~=0).*log(P(P~=0)));
+H = @(P) -sum(P(P~=0).*log(P(P~=0))); % entropy function
+
+% The original paper requires z-scoring the filtered signals. It changes
+% the normalization of mean amplitude distribution. Subtracting the mean
+% can't be emulated, but normalizing by the standard deviation can be done
+% even after Hilbert transform.
+aHigh = bsxfun(@times, aHigh, 1 ./ std(xHigh));
 
 phaseBins = linspace(-pi, pi, nBin + 1);
 phaseBinCenters = (phaseBins(1:end-1) + phaseBins(2:end))/2;
 
+CFC = zeros(N, 1);
 aacpd = zeros(numel(phaseBins)-1, N);
 for k = 1:N
     for kBin = 1:numel(phaseBins)-1
