@@ -1,5 +1,5 @@
-function CFC = estimateCFC_GLM_Penny2008(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHigh, phiHigh)
-% residual of GLM regression to sin and cos of phase
+function CFC = estimateCFC_R2R_Penny2008(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHigh, phiHigh)
+% r^2 of the residual from GLM regression of amplitude from sin and cos of phase
 
 CFC = zeros(size(xLow, 2), 1);
 T = size(phiLow, 1);

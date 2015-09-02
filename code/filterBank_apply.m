@@ -39,12 +39,17 @@ fHighRange = fCenterList(fCenterList >= 40); nHigh = numel(fHighRange);
 assert(nLow > 0);
 assert(nHigh > 0);
 
+%% Get some estimators
+estimators = CFCestimatorFactory('all');
+nEstimator = numel(estimators);
+
 % Parameters for the surrogate generation
 nSurrogate = 999; % number of shuffled surrogates requested
 minTimeShift = 0.1 * fs; % minimum time to be separated to have phase decoherence
 rpIdxAll = generateSurrogateIndices(T - 2*nTap, minTimeShift, nSurrogate);
 
-CFC(nLow, nHigh) = surrogateStats(); % initialize results structure
+CFC = {}; clear CFC
+CFC(nEstimator, nLow, nHigh) = surrogateStats(); % initialize results structure
 for kLow = 1:nLow
     fLow = fLowRange(kLow);
     xLow = x_filtered(:, kLow);
@@ -66,30 +71,36 @@ for kLow = 1:nLow
 
 %         CFCtemp = estimateCFC_GLM_Penny2008(fLow, fHigh, ...
 %                         xxLow, xxHigh, xaLow, xpLow, xaHigh, xpHigh);
-        CFCtemp = estimateCFC_Tort2008(fLow, fHigh, ...
-                        xxLow, xxHigh, xaLow, xpLow, xaHigh, xpHigh);
+        for kEstim = 1:nEstimator
+            CFCtemp = estimators(kEstim).handle(fLow, fHigh, ...
+                            xxLow, xxHigh, xaLow, xpLow, xaHigh, xpHigh);
 
-        stat = surrogateStats(CFCtemp(1), CFCtemp(2:end));
-        CFC(kLow, kHigh) = stat;
+            stat = surrogateStats(CFCtemp(1), CFCtemp(2:end));
+            CFC(kEstim, kLow, kHigh) = stat;
+        end
     end
 end
 
 %%
-figure(5877); clf;
+
+for kEstim = 1:nEstimator
+figure(5877+kEstim); clf;
 
 subplot(1,3,1);
-imagesc(fLowRange, fHighRange, reshape([CFC.value], nLow, nHigh)'); axis xy; colorbar; colormap('jet')
+imagesc(fLowRange, fHighRange, reshape([CFC(kEstim,:,:).value], nLow, nHigh)'); axis xy; colorbar; colormap('jet')
+title(estimators(kEstim).desc);
 
 subplot(1,3,2);
-imagesc(fLowRange, fHighRange, reshape([CFC.deviation], nLow, nHigh)'); axis xy; colorbar; colormap('jet')
+imagesc(fLowRange, fHighRange, reshape([CFC(kEstim,:,:).deviation], nLow, nHigh)'); axis xy; colorbar; colormap('jet')
 title('deviation');
 xlabel('Freq (Hz)'); ylabel('Freq (Hz)');
 hold on
 plot(f1*fs, f2*fs, 'ro');
 
 subplot(1,3,3);
-imagesc(fLowRange, fHighRange, reshape([CFC.pValue], nLow, nHigh)'); axis xy; colorbar; colormap('jet')
+imagesc(fLowRange, fHighRange, reshape([CFC(kEstim,:,:).pValue], nLow, nHigh)'); axis xy; colorbar; colormap('jet')
 title('p-value')
 xlabel('Freq (Hz)'); ylabel('Freq (Hz)');
 hold on
 plot(f1*fs, f2*fs, 'ro');
+end
