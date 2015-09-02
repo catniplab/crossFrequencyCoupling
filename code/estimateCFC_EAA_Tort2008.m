@@ -1,6 +1,6 @@
-function [CFC, extra] = estimateCFC_Tort2008(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHigh, phiHigh, param)
-% CFC = estimateCFC_Tort2008(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHigh, phiHigh, param)
-% Entropy of average amplitude conditioned on phase distribution method
+function [CFC, extra] = estimateCFC_EAA_Tort2008(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHigh, phiHigh, param)
+% CFC = estimateCFC_EAA_Tort2008(fLow, fHigh, xLow, xHigh, aLow, phiLow, aHigh, phiHigh, param)
+% Entropy of Average Amplitude (EAA) conditioned on phase distribution method
 %
 % Extra parameter: # of phase bins (default 18).
 
