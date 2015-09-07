@@ -1,12 +1,18 @@
-%%
+%% Design filter bank
+fs = 1000;
+[b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 4, fs, 'fir1', 3);
+
+%% Make some fake signal with cross-frequency coupling
 TT = 5000;
 T = TT + 2 * nTap;
 
 f1 = 12 / fs;
-f2 = 72 / fs;
+f2 = 67 / fs;
+f3 = 100 / fs;
 e1 = cos(2 * pi * f1 * (1:T) + 0.1 * cumsum(randn(1, T)));
 e2 = exp(-2*e1) .* cos(2 * pi * f2 * (1:T)) / 4;
-x = e1 + e2;
+e3 = sin(2 * pi * f3 * (1:T) + 0.1 * cumsum(randn(1, T)));
+x = e1 + e2 + e3;
 x = x(:);
 x = zscore(x) + 0.01 * randn(T, 1);
 
@@ -22,14 +28,7 @@ plot(x, 'k');
 xlim([100, 500]);
 
 %%
-nFilter = numel(fCenterList);
-x_filtered = zeros(T - 2*nTap, nFilter);
-x_analytic = complex(x_filtered, 0);
-for kCenter = 1:numel(fCenterList)
-    xTemp = filtfilt(b{kCenter}, 1, x);
-    x_filtered(:, kCenter) = removeBoundaryHandle(xTemp);
-    x_analytic(:, kCenter) = hilbert(x_filtered(:, kCenter));
-end
+[x_filtered, x_analytic] = applyFilterBankThenHT_filtfilt(b, a, x, nTap);
 amplitude = abs(x_analytic);
 phase = angle(x_analytic);
 
@@ -81,10 +80,12 @@ for kLow = 1:nLow
     end
 end
 
+ts = datestr(now,30);
+
 %%
 
 for kEstim = 1:nEstimator
-figure(5877+kEstim); clf;
+fig = figure(5877+kEstim); clf;
 
 subplot(1,3,1);
 imagesc(fLowRange, fHighRange, reshape([CFC(kEstim,:,:).value], nLow, nHigh)'); axis xy; colorbar; colormap('jet')
@@ -103,4 +104,7 @@ title('p-value')
 xlabel('Freq (Hz)'); ylabel('Freq (Hz)');
 hold on
 plot(f1*fs, f2*fs, 'ro');
+
+set(fig, 'PaperSize', [8 3], 'PaperPosition', [0 0 8 3]);
+saveas(fig, sprintf('%s_%s.pdf', ts, estimators(kEstim).ID));
 end
