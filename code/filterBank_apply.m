@@ -1,7 +1,7 @@
 %% Design filter bank
 fs = 1000;
 
-switch 1
+switch 7
     case 1
         [b, a, fCenterList, nTap] = filterBank_uniform(8, 100, 5, 5, fs, 'cheby2', 3);
         FB_prefix = 'cb2_bw5_40';
@@ -14,6 +14,18 @@ switch 1
     case 4
         [b, a, fCenterList, nTap] = filterBank_uniform(8, 100, 5, 4, fs, 'firls', 6);
         FB_prefix = 'firls_bw4_nC6';
+    case 5
+        [b, a, fCenterList, suggestedBoundaryRemoval, fEdges] = filterBank_prop(5, 100, 3, 5, 1000, 'firls');
+        FB_prefix = 'pLS_TBP3';
+    case 6
+        [b, a, fCenterList, suggestedBoundaryRemoval, fEdges] = filterBank_prop(4, 100, 2, 7, 1000, 'fir1');
+        FB_prefix = 'pfir1_TBP2';
+    case 7
+        [b, a, fCenterList, suggestedBoundaryRemoval, fEdges] = filterBank_prop(4, 150, 1, 3, 1000, 'fir1', 3);
+        FB_prefix = 'pfir1_TBP1';
+    case 8
+        [b, a, fCenterList, suggestedBoundaryRemoval, fEdges] = filterBank_prop(4, 150, 1, 3, 1000, 'cheby2', 3);
+        FB_prefix = 'pchb2_TBP1';
 end
 visualizeFilterBank(b, a, fCenterList, fs, FB_prefix);
 
@@ -29,23 +41,54 @@ e2 = exp(-2*e1) .* cos(2 * pi * f2 * (1:T)) / 4;
 e3 = sin(2 * pi * f3 * (1:T) + 0.1 * cumsum(randn(1, T)));
 x = e1 + e2 + e3;
 x = x(:);
-x = zscore(x) + 0.01 * randn(T, 1);
+x = zscore(x) + 0.1 * randn(T, 1);
 
+%%
 figure(924); clf;
-subplot(2,1,1); hold all;
+subplot(4,1,1); hold all;
 pwelch(x, [], [], [], fs);
 line(fs * f1 * [1, 1], [-30, -20], 'Color', 'r');
 line(fs * f2 * [1, 1], [-30, -20], 'Color', 'r');
 xlim([0 200]);
-subplot(2,1,2); hold all
+
+subplot(4,1,2); hold all
+tRange = nTap + (100:500);
 plot(e1); plot(e2);
 plot(x, 'k');
-xlim([100, 500]);
+xlim([tRange(1), tRange(end)]);
 
 %%
 [x_filtered, x_analytic] = applyFilterBankThenHT_filtfilt(b, a, x, nTap);
 amplitude = abs(x_analytic);
 phase = angle(x_analytic);
+
+%% Visualize some of the filtered signals
+figure(924); 
+nBand = numel(b);
+tRange = tRange - nTap;
+for kBand = 1:nBand
+    subplot(4,1,1);
+    [h, w] = freqz(b{kBand}, a{kBand}, 1024);
+    if ~isempty(ph)
+        delete(ph);
+    end
+    ph = plot(w * fs / 2 / pi, 10*log10(abs(h)));
+    ylim([-60, 0]);
+    
+    subplot(4,1,3); cla; hold all;
+    plot(tRange, x_filtered(tRange, kBand));
+    plot(tRange, amplitude(tRange, kBand));
+    xlim([tRange(1), tRange(end)]);
+    subplot(4,1,4); cla; hold all;
+    plot(tRange, phase(tRange, kBand));
+    title(num2str(fEdges(:, kBand)'))
+    drawnow
+    pause(0.5);
+end
+r = input('Go? ', 's');
+if lower(r(1)) ~= 'y'
+    disp('Aborting');
+end
 
 %%
 fLowRange = fCenterList(fCenterList <= 35); nLow = numel(fLowRange);
@@ -125,5 +168,5 @@ hold on
 plot(f1*fs, f2*fs, 'ro');
 
 set(fig, 'PaperSize', [8 3], 'PaperPosition', [0 0 8 3]);
-saveas(fig, sprintf('%s_%s.pdf', ts, estimators(kEstim).ID));
+saveas(fig, sprintf('%s_%s_%s.pdf', ts, FB_prefix, estimators(kEstim).ID));
 end

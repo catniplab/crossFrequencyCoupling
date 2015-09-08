@@ -21,7 +21,7 @@ if nargin < 1
 end
 
 nSurrogate = numel(surrogateSamples);
-pValue = (sum(surrogateSamples > observedSample) + 1)/nSurrogate;
+pValue = (sum(surrogateSamples > observedSample) + 1)/(nSurrogate+1); % small bias away from 0
 m = mean(surrogateSamples);
 s = std(surrogateSamples);
 dev = (observedSample - m)/s;
