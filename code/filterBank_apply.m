@@ -1,6 +1,21 @@
 %% Design filter bank
 fs = 1000;
-[b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 4, fs, 'fir1', 3);
+
+switch 1
+    case 1
+        [b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 5, fs, 'cheby2', 3);
+        FB_prefix = 'cb2_bw5_40';
+    case 2
+        [b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 4, fs, 'firls', 3);
+        FB_prefix = 'firls_bw4';
+    case 3
+        [b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 4, fs, 'fir1', 3);
+        FB_prefix = 'fir1_bw4';
+    case 4
+        [b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 4, fs, 'firls', 6);
+        FB_prefix = 'firls_bw4_nC6';
+end
+visualizeFilterBank(b, a, fCenterList, fs, FB_prefix);
 
 %% Make some fake signal with cross-frequency coupling
 TT = 5000;
@@ -99,8 +114,12 @@ hold on
 plot(f1*fs, f2*fs, 'ro');
 
 subplot(1,3,3);
-imagesc(fLowRange, fHighRange, reshape([CFC(kEstim,:,:).pValue], nLow, nHigh)'); axis xy; colorbar; colormap('jet')
-title('p-value')
+pValueMap = reshape([CFC(kEstim,:,:).pValue], nLow, nHigh)'; % returns rounded up p-value...
+significanceMap = (pValueMap <= 0.1) + (pValueMap <= 0.05) + (pValueMap <= 0.001);
+imagesc(fLowRange, fHighRange, significanceMap); axis xy;
+cbh = colorbar; colormap('jet'); caxis([0 3]);
+set(cbh, 'Ticks', [0 1 2 3], 'TickLabels', {'n.s.', 'p < 0.1', 'p < 0.05', 'p < 0.001'});
+title('significance map')
 xlabel('Freq (Hz)'); ylabel('Freq (Hz)');
 hold on
 plot(f1*fs, f2*fs, 'ro');

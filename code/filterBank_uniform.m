@@ -1,5 +1,10 @@
-function [b, a, fCenterList, suggestedBoundaryRemoval] = filterBank_simple(fMin, fMax, fStep, df, fs, designType, nCycle)
-% Generate a filter bank comprised of bandpass digital filters
+function [b, a, fCenterList, suggestedBoundaryRemoval] = filterBank_uniform(fMin, fMax, fStep, df, fs, designType, nCycle)
+% Generate a filter bank comprised of bandpass digital filters.
+% This creates equal-bandwidth filters. If FIR with time resolution
+% inversely propotional to frequency is used (for Hilber transform),
+% uncertainty principle tells us, we need to sacrifice something...
+% If IIR is used, then for higher frequencies we will have longer
+% time scale which is not appropriate for envelop & phase extraction.
 %
 % Input
 %    fMin: [1] minimum center frequency
@@ -42,7 +47,8 @@ switch lower(designType)
         isFIR = true;
         
     case {'cheby2'}
-        designBPhandle = @(f) cheby2(6, 30, [f-df/2, f+df/2] * 2 / fs);
+        %[n,Ws] = cheb2ord(Wp,Ws,Rp,Rs)
+        designBPhandle = @(f) cheby2(4, 40, [f-df/2, f+df/2] * 2 / fs);
         isFIR = false;
         
     otherwise
