@@ -3,16 +3,16 @@ fs = 1000;
 
 switch 1
     case 1
-        [b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 5, fs, 'cheby2', 3);
+        [b, a, fCenterList, nTap] = filterBank_uniform(8, 100, 5, 5, fs, 'cheby2', 3);
         FB_prefix = 'cb2_bw5_40';
     case 2
-        [b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 4, fs, 'firls', 3);
+        [b, a, fCenterList, nTap] = filterBank_uniform(8, 100, 5, 4, fs, 'firls', 3);
         FB_prefix = 'firls_bw4';
     case 3
-        [b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 4, fs, 'fir1', 3);
+        [b, a, fCenterList, nTap] = filterBank_uniform(8, 100, 5, 4, fs, 'fir1', 3);
         FB_prefix = 'fir1_bw4';
     case 4
-        [b, a, fCenterList, nTap] = filterBank_simple(8, 100, 5, 4, fs, 'firls', 6);
+        [b, a, fCenterList, nTap] = filterBank_uniform(8, 100, 5, 4, fs, 'firls', 6);
         FB_prefix = 'firls_bw4_nC6';
 end
 visualizeFilterBank(b, a, fCenterList, fs, FB_prefix);
