@@ -1,4 +1,4 @@
-function visualizeFilterBank(b, a, fCenterList, fs, prefix)
+function fig = visualizeFilterBank(b, a, fCenterList, fs, prefix)
 %%
 nFilter = numel(b);
 assert(numel(a) == nFilter);
