@@ -5,8 +5,13 @@ if nargin < 1 || isempty(names)
     return
 end
 
-if isstr(names) && strcmpi(names, 'all')
-    names = {'MCS', 'PLV', 'ESC', 'R2R', 'EAA'};
+if ischar(names)
+    if strcmpi(names, 'all')
+        names = {'MCS', 'PLV', 'ESC', 'R2R', 'EAA'};
+    else
+        estimators = resolveOne(names);
+        return
+    end
 end
 
 for k = 1:numel(names)
