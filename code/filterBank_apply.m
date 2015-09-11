@@ -1,5 +1,5 @@
 %% Design filter bank
-fs = 1000;
+fs = 1000; % sampling frequency
 
 switch 7
     case 1
@@ -15,33 +15,50 @@ switch 7
         [b, a, fCenterList, nTap] = filterBank_uniform(8, 100, 5, 4, fs, 'firls', 6);
         FB_prefix = 'firls_bw4_nC6';
     case 5
-        [b, a, fCenterList, suggestedBoundaryRemoval, fEdges] = filterBank_prop(5, 100, 3, 5, 1000, 'firls');
+        [b, a, fCenterList, nTap, fEdges] = filterBank_prop(5, 100, 3, 5, 1000, 'firls');
         FB_prefix = 'pLS_TBP3';
     case 6
-        [b, a, fCenterList, suggestedBoundaryRemoval, fEdges] = filterBank_prop(4, 100, 2, 7, 1000, 'fir1');
+        [b, a, fCenterList, nTap, fEdges] = filterBank_prop(4, 100, 2, 7, 1000, 'fir1');
         FB_prefix = 'pfir1_TBP2';
     case 7
-        [b, a, fCenterList, suggestedBoundaryRemoval, fEdges] = filterBank_prop(4, 150, 1, 3, 1000, 'fir1', 3);
+        [b, a, fCenterList, nTap, fEdges] = filterBank_prop(4, 150, 1, 3, 1000, 'fir1', 3);
+        % uniformly spaced frequency bands
         FB_prefix = 'pfir1_TBP1';
     case 8
-        [b, a, fCenterList, suggestedBoundaryRemoval, fEdges] = filterBank_prop(4, 150, 1, 3, 1000, 'cheby2', 3);
+        [b, a, fCenterList, nTap, fEdges] = filterBank_prop(4, 150, 1, 3, 1000, 'cheby2', 3);
         FB_prefix = 'pchb2_TBP1';
 end
-visualizeFilterBank(b, a, fCenterList, fs, FB_prefix);
+figVis = visualizeFilterBank(b, a, fCenterList, fs, FB_prefix);
 
 %% Make some fake signal with cross-frequency coupling
 TT = 5000;
 T = TT + 2 * nTap;
 
-f1 = 12 / fs;
-f2 = 67 / fs;
+f1 = 10 / fs;
+f2 = 75 / fs;
 f3 = 100 / fs;
 e1 = cos(2 * pi * f1 * (1:T) + 0.1 * cumsum(randn(1, T)));
 e2 = exp(-2*e1) .* cos(2 * pi * f2 * (1:T)) / 4;
-e3 = sin(2 * pi * f3 * (1:T) + 0.1 * cumsum(randn(1, T)));
-x = e1 + e2 + e3;
+%e3 = sin(2 * pi * f3 * (1:T) + 0.1 * cumsum(randn(1, T)));
+x = e1 + e2; % + e3;
 x = x(:);
-x = zscore(x) + 0.1 * randn(T, 1);
+%x = zscore(x) + 0.1 * randn(T, 1);
+
+%% Add spectrally matching noise
+% We want to make the Fourier transform magnitude 1
+fx = fft(x);
+ap = abs(fx);
+aq = quantile(ap, 0.95);
+ap(ap > aq) = aq;
+ap = (aq - ap) / aq;
+
+% introduce random phase, unit power noise
+fnoise = fft(randn(size(x)));
+fnoise = fnoise .* ap;
+noise = 2 * ifft(fnoise);
+x = x + noise;
+
+clear fx ap aq fnoise
 
 %%
 figure(924); clf;
@@ -57,15 +74,16 @@ plot(e1); plot(e2);
 plot(x, 'k');
 xlim([tRange(1), tRange(end)]);
 
+tRange = tRange - nTap;
+
 %%
 [x_filtered, x_analytic] = applyFilterBankThenHT_filtfilt(b, a, x, nTap);
 amplitude = abs(x_analytic);
 phase = angle(x_analytic);
 
 %% Visualize some of the filtered signals
-figure(924); 
-nBand = numel(b);
-tRange = tRange - nTap;
+fig = figure(924);
+nBand = numel(b); ph = [];
 for kBand = 1:nBand
     subplot(4,1,1);
     [h, w] = freqz(b{kBand}, a{kBand}, 1024);
@@ -88,16 +106,26 @@ end
 r = input('Go? ', 's');
 if lower(r(1)) ~= 'y'
     disp('Aborting');
+    return
 end
+
+ts = datestr(now,30);
+
+set(fig, 'PaperSize', [5 8], 'PaperPosition', [0 0 5 8]);
+saveas(fig, sprintf('%s_%s_sample.pdf', ts, FB_prefix));
+
+set(figVis, 'PaperSize', [8 5], 'PaperPosition', [0 0 8 5]);
+saveas(figVis, sprintf('%s_%s_filters.pdf', ts, FB_prefix));
 
 %%
 fLowRange = fCenterList(fCenterList <= 35); nLow = numel(fLowRange);
 fHighRange = fCenterList(fCenterList >= 40); nHigh = numel(fHighRange);
+highIdxOffset = find(fCenterList == fHighRange(1)) - 1;
 assert(nLow > 0);
 assert(nHigh > 0);
 
 %% Get some estimators
-estimators = CFCestimatorFactory('all');
+estimators = CFCestimatorFactory('MCS');
 nEstimator = numel(estimators);
 
 % Parameters for the surrogate generation
@@ -114,9 +142,9 @@ for kLow = 1:nLow
     pLow = phase(:, kLow);
     for kHigh = 1:nHigh
         fHigh = fHighRange(kHigh);
-        xHigh = x_filtered(:, kHigh);
-        aHigh = amplitude(:, kHigh);
-        pHigh = phase(:, kHigh);
+        xHigh = x_filtered(:, kHigh + highIdxOffset);
+        aHigh = amplitude(:, kHigh + highIdxOffset);
+        pHigh = phase(:, kHigh + highIdxOffset);
 
         %% Generate surrogates
         xxLow  = repmat(xLow(:), 1, nSurrogate+1);
@@ -126,8 +154,6 @@ for kLow = 1:nLow
         xaHigh = aHigh(rpIdxAll);
         xpHigh = pHigh(rpIdxAll);
 
-%         CFCtemp = estimateCFC_GLM_Penny2008(fLow, fHigh, ...
-%                         xxLow, xxHigh, xaLow, xpLow, xaHigh, xpHigh);
         for kEstim = 1:nEstimator
             CFCtemp = estimators(kEstim).handle(fLow, fHigh, ...
                             xxLow, xxHigh, xaLow, xpLow, xaHigh, xpHigh);
@@ -138,10 +164,7 @@ for kLow = 1:nLow
     end
 end
 
-ts = datestr(now,30);
-
 %%
-
 for kEstim = 1:nEstimator
 fig = figure(5877+kEstim); clf;
 
