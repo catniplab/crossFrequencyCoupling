@@ -45,7 +45,6 @@ T = TT + 2 * nTap;
 
 f1 = 10 / fs;
 f2 = 75 / fs;
-f3 = 100 / fs;
 e1 = cos(2 * pi * f1 * (1:T) + 0.1 * cumsum(randn(1, T)));
 e2 = exp(-2*e1) .* cos(2 * pi * f2 * (1:T)) / 4;
 x = e1 + e2;
@@ -77,9 +76,11 @@ xlim([0 200]);
 
 subplot(4,1,2); hold all
 tRange = nTap + (100:500);
-plot(e1); plot(e2);
+plot(e1, 'LineWidth', 2);
+plot(e2, 'LineWidth', 2);
 plot(x, 'k');
 xlim([tRange(1), tRange(end)]);
+lh = legend(sprintf('slow oscillation (%d Hz)', f1), sprintf('fast oscillation (%d Hz)', f2), 'noisy observation');
 
 tRange = tRange - nTap;
 
@@ -188,7 +189,7 @@ significanceMap = (pValueMap <= 0.1) + (pValueMap <= 0.05) + (pValueMap <= 0.001
 imagesc(fLowRange, fHighRange, significanceMap); axis xy;
 cbh = colorbar; colormap('jet'); caxis([0 3]);
 set(cbh, 'Ticks', [0 1 2 3], 'TickLabels', {'n.s.', 'p < 0.1', 'p < 0.05', 'p < 0.001'});
-title('significance map')
+title('significance (bootstrap, unadjusted)')
 xlabel('Freq (Hz)'); ylabel('Freq (Hz)');
 hold on
 plot(f1*fs, f2*fs, 'ro');
