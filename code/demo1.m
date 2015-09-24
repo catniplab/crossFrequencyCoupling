@@ -1,6 +1,12 @@
-%% Design filter bank
+%% Basic parameters for the demo
 fs = 1000; % sampling frequency
+plotDelay = 0.01; % delay in sequence designed filter plots (in seconds)
+outDir = 'demo_output';
 
+warning('off', 'MATLAB:MKDIR:DirectoryExists')
+mkdir(outDir);
+
+%% Design filter bank
 switch 7
     case 1
         [b, a, fCenterList, nTap] = filterBank_uniform(8, 100, 5, 5, fs, 'cheby2', 3);
@@ -28,7 +34,8 @@ switch 7
         [b, a, fCenterList, nTap, fEdges] = filterBank_prop(4, 150, 1, 3, 1000, 'cheby2', 3);
         FB_prefix = 'pchb2_TBP1';
 end
-figVis = visualizeFilterBank(b, a, fCenterList, fs, FB_prefix);
+figVis = visualizeFilterBank(b, a, fCenterList, fs, outDir, FB_prefix);
+saveas(fig, sprintf('filterBank_%s_%d.png', prefix, ceil(kCenter/5)));
 
 %% Make some fake signal with cross-frequency coupling
 TT = 5000;
@@ -39,10 +46,8 @@ f2 = 75 / fs;
 f3 = 100 / fs;
 e1 = cos(2 * pi * f1 * (1:T) + 0.1 * cumsum(randn(1, T)));
 e2 = exp(-2*e1) .* cos(2 * pi * f2 * (1:T)) / 4;
-%e3 = sin(2 * pi * f3 * (1:T) + 0.1 * cumsum(randn(1, T)));
-x = e1 + e2; % + e3;
+x = e1 + e2;
 x = x(:);
-%x = zscore(x) + 0.1 * randn(T, 1);
 
 %% Add spectrally matching noise
 % We want to make the Fourier transform magnitude 1
@@ -101,7 +106,7 @@ for kBand = 1:nBand
     plot(tRange, phase(tRange, kBand));
     title(num2str(fEdges(:, kBand)'))
     drawnow
-    pause(0.5);
+    pause(plotDelay);
 end
 r = input('Go? ', 's');
 if lower(r(1)) ~= 'y'
