@@ -33,9 +33,11 @@ switch 7
     case 8
         [b, a, fCenterList, nTap, fEdges] = filterBank_prop(4, 150, 1, 3, 1000, 'cheby2', 3);
         FB_prefix = 'pchb2_TBP1';
+    case 9
+        [b, a, fCenterList, nTap, fEdges] = filterBank_bal(4:3:150, 1, 3, 1000, 'fir1');
+        FB_prefix = 'bfir1_1';
 end
 figVis = visualizeFilterBank(b, a, fCenterList, fs, outDir, FB_prefix);
-saveas(fig, sprintf('filterBank_%s_%d.png', prefix, ceil(kCenter/5)));
 
 %% Make some fake signal with cross-frequency coupling
 TT = 5000;
@@ -108,19 +110,15 @@ for kBand = 1:nBand
     drawnow
     pause(plotDelay);
 end
-r = input('Go? ', 's');
-if lower(r(1)) ~= 'y'
-    disp('Aborting');
-    return
-end
+% r = input('Go? ', 's'); if lower(r(1)) ~= 'y'; disp('Aborting'); return; end
 
 ts = datestr(now,30);
 
 set(fig, 'PaperSize', [5 8], 'PaperPosition', [0 0 5 8]);
-saveas(fig, sprintf('%s_%s_sample.pdf', ts, FB_prefix));
+saveas(fig, sprintf('%s/%s_%s_sample.pdf', outDir, ts, FB_prefix));
 
 set(figVis, 'PaperSize', [8 5], 'PaperPosition', [0 0 8 5]);
-saveas(figVis, sprintf('%s_%s_filters.pdf', ts, FB_prefix));
+saveas(figVis, sprintf('%s/%s_%s_filters.pdf', outDir, ts, FB_prefix));
 
 %%
 fLowRange = fCenterList(fCenterList <= 35); nLow = numel(fLowRange);
@@ -130,7 +128,7 @@ assert(nLow > 0);
 assert(nHigh > 0);
 
 %% Get some estimators
-estimators = CFCestimatorFactory('MCS');
+estimators = CFCestimatorFactory('all');
 nEstimator = numel(estimators);
 
 % Parameters for the surrogate generation
@@ -194,7 +192,8 @@ title('significance map')
 xlabel('Freq (Hz)'); ylabel('Freq (Hz)');
 hold on
 plot(f1*fs, f2*fs, 'ro');
+drawnow
 
 set(fig, 'PaperSize', [8 3], 'PaperPosition', [0 0 8 3]);
-saveas(fig, sprintf('%s_%s_%s.pdf', ts, FB_prefix, estimators(kEstim).ID));
+saveas(fig, sprintf('%s/%s_%s_%s.pdf', outDir, ts, FB_prefix, estimators(kEstim).ID));
 end
