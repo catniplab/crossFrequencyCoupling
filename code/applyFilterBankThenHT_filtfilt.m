@@ -23,5 +23,6 @@ x_analytic = complex(x_filtered, 0);
 for kCenter = 1:numel(b)
     xTemp = filtfilt(b{kCenter}, a{kCenter}, x);
     x_filtered(:, kCenter) = xTemp(nBoundaryRemoval+1:end-nBoundaryRemoval);
-    x_analytic(:, kCenter) = hilbert(x_filtered(:, kCenter));
+    xTemp = hilbert(xTemp);
+    x_analytic(:, kCenter) = xTemp(nBoundaryRemoval+1:end-nBoundaryRemoval);
 end
