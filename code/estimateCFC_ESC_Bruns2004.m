@@ -7,7 +7,9 @@ function CFC = estimateCFC_ESC_Bruns2004(fLow, fHigh, xLow, xHigh, aLow, phiLow,
 % Weakness: can't discriminate between common amplidue gain and
 %           phase-correlation
 
-CFC = zeros(size(xLow, 2), 1);
-for k = 1:size(xLow, 2)
+sz = size(xLow); N = prod(sz(2:end));
+CFC = zeros(N, 1);
+for k = 1:N
     CFC(k) = abs(corr(xLow(:,k), aHigh(:,k)));
 end
+if numel(sz) > 2; CFC = reshape(CFC, sz(2:end)); end

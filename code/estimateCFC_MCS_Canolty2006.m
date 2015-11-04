@@ -5,4 +5,6 @@ function CFC = estimateCFC_MCS_Canolty2006(fLow, fHigh, xLow, xHigh, aLow, phiLo
 % Weakness: can't detect if amplitude has symmetric deviation (for example
 %           increased variance)
 
+sz = size(xLow);
 CFC = abs(mean(aHigh .* exp(1i*phiLow)));
+CFC = permute(CFC, [2:numel(sz), 1]);

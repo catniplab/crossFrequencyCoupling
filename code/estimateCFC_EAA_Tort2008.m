@@ -13,7 +13,7 @@ else
     nBin = 18;
 end
 
-N = size(xLow, 2);
+sz = size(xLow); N = prod(sz(2:end));
 H = @(P) -sum(P(P~=0).*log(P(P~=0))); % entropy function
 
 % The original paper requires z-scoring the filtered signals. It changes
@@ -39,6 +39,8 @@ for k = 1:N
     Hmax = -log(1/nBin);
     CFC(k) = (Hmax - H(aacpd))/Hmax;
 end
+
+if numel(sz) > 2; CFC = reshape(CFC, sz(2:end)); end
 
 if nargout > 1
     extra.nBin = nBin;

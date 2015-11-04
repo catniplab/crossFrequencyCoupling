@@ -1,4 +1,5 @@
 function estimators = CFCestimatorFactory(names)
+% TODO: general interface with the estimators
 
 if nargin < 1 || isempty(names)
     estimators = {'MCS', 'PLV', 'ESC', 'R2R', 'EAA'};
